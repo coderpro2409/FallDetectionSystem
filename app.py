@@ -12,7 +12,7 @@ def load_rf_model():
 
 @st.cache_resource
 def load_landmarker():
-    model_path = 'pose_landmarker_lite.task'
+    model_path = 'pose_landmarker.task'
     if not os.path.exists(model_path): st.error("Missing 'pose_landmarker.task'"); st.stop()
     return vision.PoseLandmarker.create_from_options(
         vision.PoseLandmarkerOptions(
@@ -87,6 +87,7 @@ def draw_landmarks_on_image(image, result):
     return image
 
 st.title("🏥 AI Elderly Fall Detection (Random Forest)")
+
 if 'fall' not in st.session_state: st.session_state.fall = 0
 if 'normal' not in st.session_state: st.session_state.normal = 0
 
@@ -102,7 +103,6 @@ if uploaded:
     
     if result.pose_landmarks:
         feats = extract_invariant_features(result.pose_landmarks[0])
-        # Use predict_proba for probabilities
         pred_probs = rf_model.predict_proba(feats)
         pred_idx = np.argmax(pred_probs[0])
         conf = np.max(pred_probs[0])
@@ -122,6 +122,9 @@ if uploaded:
 with col2:
     total = st.session_state.fall + st.session_state.normal
     st.metric("Total", total); st.metric("Falls", st.session_state.fall); st.metric("Normals", st.session_state.normal)
+    
     if os.path.exists("evaluation_plots"):
-        st.image("evaluation_plots/accuracy_loss_graphs.png", use_column_width=True) # Note: RF doesn't have loss graphs, but keep it for UI
-        st.image("evaluation_plots/confusion_matrix.png", use_column_width=True)
+        st.image("evaluation_plots/accuracy_loss_graphs.png", caption="Model Performance & Feature Importance", use_column_width=True)
+        st.image("evaluation_plots/confusion_matrix.png", caption="Confusion Matrix", use_column_width=True)
+    else:
+        st.info("Run `evaluate_model.py` to generate evaluation graphs.")
