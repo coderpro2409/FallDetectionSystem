@@ -12,7 +12,7 @@ def load_rf_model():
 
 @st.cache_resource
 def load_landmarker():
-    model_path = 'pose_landmarker.task'
+    model_path = 'pose_landmarker_lite.task'
     if not os.path.exists(model_path): st.error("Missing 'pose_landmarker.task'"); st.stop()
     return vision.PoseLandmarker.create_from_options(
         vision.PoseLandmarkerOptions(
@@ -91,8 +91,7 @@ st.title("🏥 AI Elderly Fall Detection (Random Forest)")
 if 'fall' not in st.session_state: st.session_state.fall = 0
 if 'normal' not in st.session_state: st.session_state.normal = 0
 
-input_mode = st.radio("Input source", ["📁 Upload Image", "📷 Live Camera"], horizontal=True)
-uploaded = st.file_uploader("Upload", type=["jpg","jpeg","png"]) if input_mode == "📁 Upload Image" else st.camera_input("Take a photo")
+uploaded = st.file_uploader("Upload", type=["jpg","jpeg","png"])
 
 col1, col2 = st.columns([2, 1])
 
@@ -116,7 +115,7 @@ if uploaded:
             st.session_state.normal += 1
             col2.success(f"✅ {CLASS_LABELS[pred_idx]} ({conf:.2f})")
             cv2.putText(annotated_img, CLASS_LABELS[pred_idx], (20,30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,255,0), 2)
-        col1.image(annotated_img, use_column_width=True)
+        col1.image(annotated_img)
     else: col1.warning("No pose detected.")
 
 with col2:
@@ -124,7 +123,7 @@ with col2:
     st.metric("Total", total); st.metric("Falls", st.session_state.fall); st.metric("Normals", st.session_state.normal)
     
     if os.path.exists("evaluation_plots"):
-        st.image("evaluation_plots/accuracy_loss_graphs.png", caption="Model Performance & Feature Importance", use_column_width=True)
-        st.image("evaluation_plots/confusion_matrix.png", caption="Confusion Matrix", use_column_width=True)
+        st.image("evaluation_plots/accuracy_loss_graphs.png", caption="Model Performance & Feature Importance")
+        st.image("evaluation_plots/confusion_matrix.png", caption="Confusion Matrix")
     else:
         st.info("Run `evaluate_model.py` to generate evaluation graphs.")
